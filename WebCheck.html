@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WebCheck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f4;--surface:#fff;--ink:#14232b;--mute:#5b6b74;--line:#d3dce1;--accent:#0b6b73;--accent-ink:#fff;
+--pass:#17803d;--fail:#c62f2f;--warn:#b26a00;--na:#6b7780;--todo:#8a979f;
+--s-critical:#b3122e;--s-major:#d9561a;--s-minor:#b8860b;--s-trivial:#4a6a8a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1f;--surface:#17252c;--ink:#e6eef1;--mute:#93a5ad;--line:#2b3d46;--accent:#4cc3cc;--accent-ink:#06262a;--pass:#46c277;--fail:#ff7070;--warn:#e8a43a;--na:#93a5ad;--todo:#6f828b;--s-critical:#ff6b81;--s-major:#ff9a62;--s-minor:#e2b84a;--s-trivial:#8bb4dd}}
+:root[data-theme="dark"]{--bg:#0f1a1f;--surface:#17252c;--ink:#e6eef1;--mute:#93a5ad;--line:#2b3d46;--accent:#4cc3cc;--accent-ink:#06262a;--pass:#46c277;--fail:#ff7070;--warn:#e8a43a;--na:#93a5ad;--todo:#6f828b;--s-critical:#ff6b81;--s-major:#ff9a62;--s-minor:#e2b84a;--s-trivial:#8bb4dd}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:26px;font-weight:600;margin:0}
+h2{font-size:18px;font-weight:600;margin:0 0 4px}
+h3{font-size:15px;font-weight:600;margin:20px 0 6px}
+p.sub{margin:2px 0 14px;color:var(--mute)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+textarea{resize:vertical;min-height:70px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+button.link{border:0;background:none;color:var(--mute);padding:2px 6px;text-decoration:underline}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin:16px 0}
+nav.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;color:var(--mute);padding:9px 12px;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+nav.tabs .n{font-size:12px;color:var(--mute);margin-left:4px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .t{flex:1}
+.item .t small{display:block;color:var(--mute)}
+.st{min-width:84px;text-align:center;font-weight:500;border-radius:999px;padding:3px 10px;border:1px solid currentColor;background:none}
+.st[data-s="todo"]{color:var(--todo)}.st[data-s="pass"]{color:var(--pass)}.st[data-s="fail"]{color:var(--fail)}.st[data-s="na"]{color:var(--na)}.st[data-s="warn"]{color:var(--warn)}
+.st[data-s="pass"],.st[data-s="fail"],.st[data-s="warn"]{background:color-mix(in srgb,currentColor 12%,transparent)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:center;font-size:14px}
+th:first-child,td:first-child{text-align:left}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 12px;display:flex}
+.bar i{display:block;height:100%}
+.sev{display:inline-block;font-weight:600;font-size:13px;padding:2px 8px;border-radius:4px;color:#fff}
+.sev.Critical{background:var(--s-critical)}.sev.Major{background:var(--s-major)}.sev.Minor{background:var(--s-minor)}.sev.Trivial{background:var(--s-trivial)}
+.bug{border-top:1px solid var(--line);padding:10px 0}
+.bug:first-child{border-top:0}
+.bug .meta{color:var(--mute);font-size:13px}
+.bug p{margin:4px 0}
+.stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px}
+.stat b{font-size:22px;display:block}
+.verdict{font-size:17px;font-weight:600}
+.empty{color:var(--mute);padding:10px 0}
+.hint{font-size:13px;color:var(--mute)}
+details{margin-top:10px;font-size:13px;color:var(--mute)}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;overflow-x:auto;font-size:12px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@media print{nav.tabs,.noprint,.head button{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div><h1>WebCheck</h1><p class="sub">Inspect a website, log what you find, and export a test report.</p></div>
+    <button class="link" id="reset">Clear all data</button>
+  </div>
+
+  <div class="card row">
+    <div><label for="siteName">Site name</label><input id="siteName" placeholder="Acme storefront"></div>
+    <div><label for="siteUrl">Site URL</label><input id="siteUrl" placeholder="https://example.com"></div>
+    <div><label for="tester">Tester</label><input id="tester" placeholder="Your name"></div>
+  </div>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+const GROUPS = [
+ {g:"Content", items:["All pages load without errors","Text has no typos or placeholder copy","Images load and have alt text","Favicon and page titles are set"]},
+ {g:"Navigation", items:["Main menu links go to the right pages","Logo returns to the home page","Back button behaves correctly","Custom 404 page exists"]},
+ {g:"Forms", items:["Required fields show clear errors","Invalid input (email, phone) is rejected","Successful submit shows confirmation","Tab order follows visual order"]},
+ {g:"Performance", items:["Page is usable within 3 seconds","Large images are compressed","No layout jumps while loading"]},
+ {g:"Accessibility", items:["Everything works with keyboard only","Focus outline is visible","Text contrast is readable","Headings follow a logical order"]},
+ {g:"Browsers", items:["Works in Chrome","Works in Firefox","Works in Safari","Works in Edge"]},
+ {g:"Security basics", items:["Site loads over HTTPS","No mixed-content warnings","Login pages hide passwords"]}
+];
+const VPS = [["Small phone","360 px"],["Large phone","414 px"],["Tablet","768 px"],["Laptop","1280 px"],["Desktop","1920 px"]];
+const RCHECKS = ["No sideways scrolling","Text is readable","Menu is usable","Images scale","Buttons are easy to tap"];
+const SEVS = ["Critical","Major","Minor","Trivial"];
+const SEVHELP = {Critical:"Blocks the main task or loses data",Major:"Important feature broken, workaround exists",Minor:"Small defect, little user impact",Trivial:"Cosmetic issue"};
+const CYCLE = ["todo","pass","fail","na"];
+const LABEL = {todo:"Not tested",pass:"Pass",fail:"Fail",na:"N/A",warn:"Redirect"};
+
+let S = {site:{name:"",url:"",tester:""},check:{},resp:{},links:[],bugs:[],endpoint:""};
+let tab = "check";
+try { const raw = localStorage.getItem("webcheck-v1"); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch(e){}
+function save(){ try { localStorage.setItem("webcheck-v1", JSON.stringify(S)); } catch(e){} }
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const next = s => CYCLE[(CYCLE.indexOf(s||"todo")+1)%CYCLE.length];
+const $ = id => document.getElementById(id);
+
+function counts(vals){ const c={todo:0,pass:0,fail:0,na:0,warn:0}; vals.forEach(v=>c[v||"todo"]++); return c; }
+function checklistVals(){ const v=[]; GROUPS.forEach((g,gi)=>g.items.forEach((_,i)=>v.push(S.check[gi+"-"+i]))); return v; }
+function respVals(){ const v=[]; VPS.forEach((_,vi)=>RCHECKS.forEach((_,ci)=>v.push(S.resp[vi+"-"+ci]))); return v; }
+
+function renderTabs(){
+  const open = S.bugs.length, fails = counts(checklistVals()).fail;
+  const defs = [["check","Checklist",fails?fails+" fail":""],["resp","Responsive",""],["links","Links",S.links.length||""],["bugs","Bugs",open||""],["report","Report",""]];
+  $("tabs").innerHTML = defs.map(([id,l,n])=>`<button role="tab" aria-selected="${tab===id}" data-tab="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("");
+}
+
+function statusBtn(key,val,attr){ return `<button class="st" data-s="${val||"todo"}" ${attr}="${key}" aria-label="Status: ${LABEL[val||"todo"]}. Click to change">${LABEL[val||"todo"]}</button>`; }
+
+function viewCheck(){
+  const c = counts(checklistVals()), tot = c.pass+c.fail+c.todo;
+  let h = `<div class="card"><h2>Auto scan</h2><p class="sub">Crawls the site entered above and fills in the checks a computer can do, plus links and bugs. Needs the WebCheck scanner running on your computer.</p><div class="row"><div><label for="scanEp">Scanner address</label><input id="scanEp" value="${esc(S.endpoint)}" placeholder="http://localhost:3000"></div></div><div style="margin-top:8px"><button class="primary" id="runScan">Scan site</button> <span class="hint" id="scanMsg"></span></div></div><div class="card"><h2>Manual testing checklist</h2><p class="sub">Click a status to cycle: Not tested, Pass, Fail, N/A.</p>
+  <div class="bar" aria-hidden="true"><i style="width:${c.pass/ (tot+c.na||1)*100}%;background:var(--pass)"></i><i style="width:${c.fail/(tot+c.na||1)*100}%;background:var(--fail)"></i></div>
+  <div class="hint">${c.pass} passed, ${c.fail} failed, ${c.todo} not tested, ${c.na} N/A</div></div>`;
+  GROUPS.forEach((g,gi)=>{
+    h += `<div class="card"><h2>${g.g}</h2>` + g.items.map((t,i)=>{
+      const k=gi+"-"+i; return `<div class="item"><div class="t">${esc(t)}</div>${statusBtn(k,S.check[k],"data-check")}</div>`;
+    }).join("") + `</div>`;
+  });
+  return h;
+}
+
+function viewResp(){
+  let h = `<div class="card"><h2>Responsive design checklist</h2><p class="sub">Resize your browser or use device mode in dev tools, then mark each check at every screen width.</p><div class="scroll"><table><thead><tr><th>Check</th>${VPS.map(v=>`<th>${v[0]}<br><span class="hint">${v[1]}</span></th>`).join("")}</tr></thead><tbody>`;
+  RCHECKS.forEach((r,ci)=>{
+    h += `<tr><td>${r}</td>` + VPS.map((_,vi)=>{const k=vi+"-"+ci; return `<td>${statusBtn(k,S.resp[k],"data-resp")}</td>`}).join("") + `</tr>`;
+  });
+  return h + `</tbody></table></div></div>`;
+}
+
+function viewLinks(){
+  let h = `<div class="card"><h2>Broken-link testing</h2><p class="sub">Paste one link per line. Check them automatically through a backend, or set each result by hand after opening the link.</p>
+  <label for="linkIn">Links</label><textarea id="linkIn" placeholder="https://example.com/about&#10;https://example.com/contact"></textarea>
+  <div style="margin-top:8px"><button id="addLinks">Add links</button></div>
+  <h3>Automatic check</h3>
+  <label for="endpoint">Backend endpoint (your link-checker API)</label>
+  <input id="endpoint" value="${esc(S.endpoint)}" placeholder="https://your-server.com/check">
+  <div style="margin-top:8px"><button class="primary" id="runCheck">Check all links</button> <span class="hint" id="chkMsg"></span></div>
+  <details><summary>How the backend should work</summary>
+  <p>Browsers block this page from testing other sites directly (CORS), so a small server does the requests. WebCheck sends <code>POST {"urls":[...]}</code> and expects <code>{"results":[{"url":"...","status":200}]}</code>. A 2xx code counts as pass, 3xx as redirect, anything else (or 0) as fail. Minimal Node.js example (18+):</p>
+  <pre>import http from "http";
+http.createServer(async (req,res)=&gt;{
+  res.setHeader("Access-Control-Allow-Origin","*");
+  res.setHeader("Access-Control-Allow-Headers","content-type");
+  if(req.method!=="POST") return res.end();
+  let b=""; for await(const c of req) b+=c;
+  const {urls}=JSON.parse(b);
+  const results=await Promise.all(urls.map(async url=&gt;{
+    try{const r=await fetch(url,{redirect:"manual"});return{url,status:r.status}}
+    catch{return{url,status:0}}}));
+  res.setHeader("Content-Type","application/json");
+  res.end(JSON.stringify({results}));
+}).listen(3000);</pre></details></div>`;
+  h += `<div class="card"><h2>Results</h2>`;
+  if(!S.links.length) h += `<div class="empty">No links yet. Add some above.</div>`;
+  S.links.forEach((l,i)=>{
+    h += `<div class="item"><div class="t"><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);word-break:break-all">${esc(l.url)}</a>${l.code!=null?`<small>HTTP ${l.code||"no response"}</small>`:""}</div>${statusBtn(i,l.status,"data-link")}<button class="link" data-rmlink="${i}" aria-label="Remove link">Remove</button></div>`;
+  });
+  return h + `</div>`;
+}
+
+function viewBugs(){
+  let h = `<div class="card"><h2>Report a bug</h2><div class="row">
+  <div><label for="bTitle">Title</label><input id="bTitle" placeholder="Contact form submits with empty email"></div>
+  <div><label for="bPage">Page or URL</label><input id="bPage" placeholder="/contact"></div>
+  <div><label for="bSev">Severity</label><select id="bSev">${SEVS.map(s=>`<option value="${s}">${s}: ${SEVHELP[s]}</option>`).join("")}</select></div>
+  <div><label for="bEnv">Browser and device</label><input id="bEnv" placeholder="Safari 17, iPhone 14"></div></div>
+  <div class="row" style="margin-top:10px">
+  <div><label for="bSteps">Steps to reproduce</label><textarea id="bSteps"></textarea></div>
+  <div><label for="bExp">Expected result</label><textarea id="bExp"></textarea></div>
+  <div><label for="bAct">Actual result</label><textarea id="bAct"></textarea></div></div>
+  <div style="margin-top:10px"><button class="primary" id="addBug">Save bug</button> <span class="hint" id="bugMsg"></span></div></div>`;
+  h += `<div class="card"><h2>Logged bugs (${S.bugs.length})</h2>`;
+  if(!S.bugs.length) h += `<div class="empty">No bugs logged yet.</div>`;
+  [...S.bugs].map((b,i)=>({b,i})).sort((a,c)=>SEVS.indexOf(a.b.sev)-SEVS.indexOf(c.b.sev)).forEach(({b,i})=>{
+    h += `<div class="bug"><span class="sev ${b.sev}">${b.sev}</span> <b>${esc(b.title)}</b> <button class="link" data-rmbug="${i}">Delete</button>
+    <div class="meta">${esc(b.page)}${b.page&&b.env?" | ":""}${esc(b.env)}</div>
+    ${b.steps?`<p><b>Steps:</b> ${esc(b.steps)}</p>`:""}${b.exp?`<p><b>Expected:</b> ${esc(b.exp)}</p>`:""}${b.act?`<p><b>Actual:</b> ${esc(b.act)}</p>`:""}</div>`;
+  });
+  return h + `</div>`;
+}
+
+function reportData(){
+  const c=counts(checklistVals()), r=counts(respVals()), l=counts(S.links.map(x=>x.status));
+  const sev={}; SEVS.forEach(s=>sev[s]=S.bugs.filter(b=>b.sev===s).length);
+  const tested = c.pass+c.fail, rtested=r.pass+r.fail;
+  let verdict="Not enough testing yet", level="warn";
+  if(sev.Critical||sev.Major){verdict="Not ready: fix Critical and Major bugs first";level="fail"}
+  else if(c.fail||r.fail||l.fail){verdict="Needs work: some checks failed";level="fail"}
+  else if(tested+rtested>0 && (c.todo||r.todo)){verdict="Looking good so far, testing is incomplete";level="warn"}
+  else if(tested+rtested>0){verdict="Ready: no blocking issues found";level="pass"}
+  return {c,r,l,sev,verdict,level};
+}
+
+function viewReport(){
+  const d=reportData();
+  const pct=(p,f)=>p+f?Math.round(p/(p+f)*100)+"%":"n/a";
+  let h = `<div class="card"><h2>Test result report</h2>
+  <p class="verdict" style="color:var(--${d.level})">${d.verdict}</p>
+  <div class="stats">
+   <div class="stat"><b>${pct(d.c.pass,d.c.fail)}</b>Checklist pass rate</div>
+   <div class="stat"><b>${pct(d.r.pass,d.r.fail)}</b>Responsive pass rate</div>
+   <div class="stat"><b>${d.l.fail}/${S.links.length}</b>Broken links</div>
+   <div class="stat"><b>${S.bugs.length}</b>Bugs logged</div></div>
+  <h3>Bugs by severity</h3><div class="stats">${SEVS.map(s=>`<div class="stat"><span class="sev ${s}">${s}</span><b>${d.sev[s]}</b></div>`).join("")}</div>
+  <h3>Report text</h3><textarea id="repText" readonly style="min-height:260px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px">${esc(reportText())}</textarea>
+  <div class="noprint" style="margin-top:8px"><button class="primary" id="copyRep">Copy report</button> <button id="printRep">Print or save as PDF</button> <span class="hint" id="repMsg"></span></div></div>`;
+  return h;
+}
+
+function reportText(){
+  const d=reportData(), L=[];
+  L.push("WEBCHECK TEST REPORT","====================");
+  L.push("Site: "+(S.site.name||"(unnamed)"),"URL: "+(S.site.url||"-"),"Tester: "+(S.site.tester||"-"),"Date: "+new Date().toLocaleDateString(),"");
+  L.push("Verdict: "+d.verdict,"");
+  L.push("SUMMARY",`Checklist: ${d.c.pass} pass, ${d.c.fail} fail, ${d.c.todo} not tested, ${d.c.na} N/A`,`Responsive: ${d.r.pass} pass, ${d.r.fail} fail, ${d.r.todo} not tested, ${d.r.na} N/A`,`Links: ${d.l.pass} ok, ${d.l.warn} redirect, ${d.l.fail} broken, ${d.l.todo} unchecked`,`Bugs: ${SEVS.map(s=>s+" "+d.sev[s]).join(", ")}`,"");
+  const fails=[]; GROUPS.forEach((g,gi)=>g.items.forEach((t,i)=>{if(S.check[gi+"-"+i]==="fail")fails.push(`- [${g.g}] ${t}`)}));
+  VPS.forEach((v,vi)=>RCHECKS.forEach((t,ci)=>{if(S.resp[vi+"-"+ci]==="fail")fails.push(`- [${v[0]} ${v[1]}] ${t}`)}));
+  L.push("FAILED CHECKS",...(fails.length?fails:["None"]),"");
+  const bl=S.links.filter(x=>x.status==="fail");
+  L.push("BROKEN LINKS",...(bl.length?bl.map(x=>`- ${x.url}${x.code!=null?" (HTTP "+(x.code||"no response")+")":""}`):["None"]),"");
+  L.push("BUGS");
+  if(!S.bugs.length) L.push("None");
+  [...S.bugs].sort((a,b)=>SEVS.indexOf(a.sev)-SEVS.indexOf(b.sev)).forEach((b,n)=>{
+    L.push(`${n+1}. [${b.sev}] ${b.title}`,b.page?`   Page: ${b.page}`:"",b.env?`   Environment: ${b.env}`:"",b.steps?`   Steps: ${b.steps}`:"",b.exp?`   Expected: ${b.exp}`:"",b.act?`   Actual: ${b.act}`:"");
+  });
+  return L.filter((x,i)=>x!==""||L[i-1]!==""||true).filter(x=>x!==undefined).join("\n").replace(/\n{3,}/g,"\n\n");
+}
+
+function render(){
+  renderTabs();
+  $("view").innerHTML = ({check:viewCheck,resp:viewResp,links:viewLinks,bugs:viewBugs,report:viewReport})[tab]();
+}
+
+async function runCheck(){
+  const msg=$("chkMsg"), ep=$("endpoint").value.trim(); S.endpoint=ep; save();
+  if(!S.links.length){msg.textContent="Add some links first.";return}
+  if(!/^https?:\/\//i.test(ep)){msg.textContent="Enter your backend URL first, or set results by hand below.";return}
+  msg.textContent="Checking...";
+  try{
+    const res=await fetch(ep,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({urls:S.links.map(l=>l.url)})});
+    if(!res.ok) throw new Error("Server replied "+res.status);
+    const data=await res.json();
+    (data.results||[]).forEach(r=>{const l=S.links.find(x=>x.url===r.url); if(!l)return; l.code=r.status; l.status=r.status>=200&&r.status<300?"pass":r.status>=300&&r.status<400?"warn":"fail"});
+    save(); render(); $("chkMsg").textContent="Done.";
+  }catch(e){ msg.textContent="Could not reach the backend ("+e.message+"). Check the URL and that it allows CORS, or set results by hand."; }
+}
+
+async function runScan(){
+  const msg=$("scanMsg"), ep=$("scanEp").value.trim().replace(/\/+$/,"").replace(/\/(check|audit)$/,""), url=(S.site.url||"").trim();
+  S.endpoint=ep; save();
+  if(!/^https?:\/\//i.test(url)){msg.textContent="Enter the site URL in the header first.";return}
+  if(!/^https?:\/\//i.test(ep)){msg.textContent="Enter the scanner address first, for example http://localhost:3000.";return}
+  msg.textContent="Scanning... this can take a minute.";
+  try{
+    const res=await fetch(ep+"/audit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})});
+    const d=await res.json();
+    if(!res.ok) throw new Error(d.error||"Server replied "+res.status);
+    Object.entries(d.checks||{}).forEach(([k,v])=>S.check[k]=v);
+    (d.links||[]).forEach(l=>{if(!S.links.some(x=>x.url===l.url))S.links.push({url:l.url,code:l.status,status:l.status>=200&&l.status<300?"pass":l.status>=300&&l.status<400?"warn":"fail"})});
+    (d.issues||[]).forEach(i=>{if(!S.bugs.some(b=>b.title===i.title&&b.page===i.page))S.bugs.push({title:i.title,page:i.page,sev:i.sev,env:"WebCheck auto scan",steps:"",exp:i.exp||"",act:i.detail||""})});
+    save(); render(); $("scanMsg").textContent="Done: "+d.pages.length+" pages and "+d.links.length+" links checked, "+d.issues.length+" issues logged. Items the scanner cannot judge are left for you.";
+  }catch(e){ msg.textContent="Scan failed ("+e.message+"). Is the scanner running, and are you opening WebCheck as a local file?"; }
+}
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button"); if(!t) return;
+  const d=t.dataset;
+  if(d.tab){tab=d.tab;render();return}
+  if(d.check!==undefined){S.check[d.check]=next(S.check[d.check]);save();render();return}
+  if(d.resp!==undefined){S.resp[d.resp]=next(S.resp[d.resp]);save();render();return}
+  if(d.link!==undefined){const l=S.links[+d.link];const order=["todo","pass","warn","fail"];l.status=order[(order.indexOf(l.status||"todo")+1)%4];save();render();return}
+  if(d.rmlink!==undefined){S.links.splice(+d.rmlink,1);save();render();return}
+  if(d.rmbug!==undefined){S.bugs.splice(+d.rmbug,1);save();render();return}
+  if(t.id==="addLinks"){
+    const urls=$("linkIn").value.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+    const bad=urls.filter(u=>!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(u));
+    urls.filter(u=>!bad.includes(u)&&!S.links.some(l=>l.url===u)).forEach(u=>S.links.push({url:u,status:"todo"}));
+    save(); render(); if(bad.length) $("chkMsg").textContent="Skipped invalid links: "+bad.join(", ");
+    return}
+  if(t.id==="runCheck"){runCheck();return}
+  if(t.id==="runScan"){runScan();return}
+  if(t.id==="addBug"){
+    const g=id=>$(id).value.trim(), title=g("bTitle");
+    if(!title){$("bugMsg").textContent="Add a title so the bug is easy to find.";$("bTitle").focus();return}
+    S.bugs.push({title,page:g("bPage"),sev:$("bSev").value,env:g("bEnv"),steps:g("bSteps"),exp:g("bExp"),act:g("bAct")});
+    save(); render(); $("bugMsg").textContent="Bug saved."; return}
+  if(t.id==="copyRep"){
+    const ta=$("repText"); ta.select();
+    try{await navigator.clipboard.writeText(ta.value);$("repMsg").textContent="Copied."}
+    catch(_){try{document.execCommand("copy");$("repMsg").textContent="Copied."}catch(__){$("repMsg").textContent="Press Ctrl+C to copy the selected text."}}
+    return}
+  if(t.id==="printRep"){try{window.print()}catch(_){$("repMsg").textContent="Printing is blocked here. Copy the report instead."}return}
+  if(t.id==="reset"){ if(confirm("Delete all checklist results, links, and bugs?")){S={site:{name:"",url:"",tester:""},check:{},resp:{},links:[],bugs:[],endpoint:""};save();syncSite();render()} }
+});
+["siteName","siteUrl","tester"].forEach((id,i)=>$(id).addEventListener("input",e=>{S.site[["name","url","tester"][i]]=e.target.value;save()}));
+function syncSite(){$("siteName").value=S.site.name||"";$("siteUrl").value=S.site.url||"";$("tester").value=S.site.tester||""}
+syncSite(); render();
+</script>
+</body>
+</html>
